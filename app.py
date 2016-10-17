@@ -13,6 +13,7 @@ db = SQLAlchemy(app)
 
 # We have to import after creating the db object
 from models import *
+from services import *
 
 
 @app.route('/', methods=['GET'])
@@ -26,18 +27,27 @@ def register():
     participant_form = ParticipantForm(request.form)
     if participant_form.validate_on_submit():
         # ensure participant doesn't exist already
-        participant = Participant.query.filter_by(email=participant_form.email.data).first()
+        participant = Participant.query.filter_by(
+            email=participant_form.email.data
+        ).first()
         if participant:
             return 'Existing'
 
-        participant = Participant(
-            firstname=participant_form.firstname.data,
-            lastname=participant_form.lastname.data,
-            email=participant_form.email.data
-        )
+        try:
+            participant = Participant(
+                firstname=participant_form.firstname.data,
+                lastname=participant_form.lastname.data,
+                email=participant_form.email.data
+            )
 
-        db.session.add(participant)
-        db.session.commit()
+            db.session.add(participant)
+            db.session.commit()
+
+            # send QR Code
+            send_code_via_mms(participant)
+        except Exception:
+            return 'Appropriate failure code'
+
         return redirect(url_for('index'))
 
 if __name__ == '__main__':
