@@ -1,0 +1,40 @@
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quick Pass</title>
+
+    <!-- Bootstrap -->
+    <link href="static/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body>
+
+  {% macro build_form_field(field, kwargs={}) %}
+    <div class="form-group">
+    <label class="col-sm-2 control-label">{{ field.label }}</label>
+    <div class="col-sm-5">
+      {% set field_id = field.label.text|lower|replace(' ', '_') %}
+      {{ field(class="form-control", id=field_id, placeholder=field.label.text, required = True, **kwargs) }}
+    </div>
+  </div> 
+  {% endmacro %}
+
+  <form class="form-horizontal" action='/register' method='POST'>
+  {{ form.csrf_token }}
+
+  <div><br /></div>
+  {{ build_form_field(form.firstname) }}
+  {{ build_form_field(form.lastname) }}
+  {{ build_form_field(form.email, {'type':'email'}) }}
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-3">
+      <button type="submit" class="btn btn-default">Register</button>
+    </div>
+  </div>
+</form>
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  </body>
+</html>
+
