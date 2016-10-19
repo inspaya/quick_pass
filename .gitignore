@@ -1,4 +1,6 @@
 .env
 *.sw[p|o]
 *.pyc
+*.insp
 _scrap/*
+generated_codes/*
