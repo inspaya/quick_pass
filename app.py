@@ -46,7 +46,8 @@ def register():
             # send QR Code
             send_code_via_mms(participant)
         except Exception as e:
-            return e
+            # return friendly message based on Exception raised internally
+            return 'Failed'
 
         return redirect(url_for('index'))
 
