@@ -15,8 +15,7 @@ def _get_environ_var(var_name):
 def _upload_qr_code(code_filename):
     """
     TODO:
-    1. Move to worker
-    2. Remove DRY code around code_fullpath
+    1. Remove DRY code around code_fullpath
     """
     code_fullpath = _get_environ_var('GENERATED_CODES_DIRECTORY') + code_filename
     with open(code_fullpath, 'rb') as fp:
@@ -30,7 +29,6 @@ def _upload_qr_code(code_filename):
 
 def _build_qr_code_and_url(select_attributes):
     """
-    TODO: Move this method into a worker.
     Create a QR Code containing unique ID based on some criteria,
     upload to secure location and return image url
     """
