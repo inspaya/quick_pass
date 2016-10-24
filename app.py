@@ -34,23 +34,25 @@ def register():
             email=participant_form.email.data
         ).first()
         if participant:
-            return 'Existing'
+            return 'Existing', 200
 
         try:
             participant = Participant(
                 firstname=participant_form.firstname.data,
                 lastname=participant_form.lastname.data,
-                email=participant_form.email.data
+                email=participant_form.email.data,
+                code=None
             )
+
+            # send QR Code
+            job = q.enqueue_call(func=send_code_via_mms, args=(participant,), result_ttl=500)
+            participant.code = job.id
 
             db.session.add(participant)
             db.session.commit()
-
-            # send QR Code
-            q.enqueue_call(func=send_code_via_mms, args=(participant,), result_ttl=500)
         except Exception as e:
             # return friendly message based on Exception raised internally
-            return 'Failed'
+            return 'Failed', 500
 
         return redirect(url_for('index'))
 
