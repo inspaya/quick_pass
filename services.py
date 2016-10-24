@@ -14,9 +14,11 @@ def _get_environ_var(var_name):
 
 def _upload_qr_code(code_filename):
     """
-    TODO: Move to worker
+    TODO:
+    1. Remove DRY code around code_fullpath
     """
-    with open(code_filename, 'rb') as fp:
+    code_fullpath = _get_environ_var('GENERATED_CODES_DIRECTORY') + code_filename
+    with open(code_fullpath, 'rb') as fp:
         ftps = FTP_TLS(_get_environ_var('FTP_HOST'))
         ftps.login(_get_environ_var('FTP_USERNAME'), _get_environ_var('FTP_PASSWORD'))
         ftps.prot_p()
@@ -27,20 +29,19 @@ def _upload_qr_code(code_filename):
 
 def _build_qr_code_and_url(select_attributes):
     """
-    TODO: Move this method into a worker.
     Create a QR Code containing unique ID based on some criteria,
     upload to secure location and return image url
     """
     try:
         code = '{}'.format(str(uuid.uuid1()))
         code_filename = '{}{}'.format(code, '.png')
-        code_text = '{}|{}'.format(code, select_attributes[0])
+        code_fullpath = _get_environ_var('GENERATED_CODES_DIRECTORY') + code_filename
         code_generator_return = check_call(
             [
                 _get_environ_var('CODE_GENERATOR_EXECUTABLE'),
                 '-o',
-                _get_environ_var('GENERATED_CODES_DIRECTORY') + code_filename,
-                code_text
+                code_fullpath,
+                code
             ]
         )
 
@@ -48,7 +49,7 @@ def _build_qr_code_and_url(select_attributes):
         if code_generator_return == 0:
             _upload_qr_code(code_filename)
             image_url = _get_environ_var('BASE_MMS_URL') + code_filename
-            return image_url, code_filename
+            return image_url, code
     except Exception as e:
         raise e
 
@@ -60,7 +61,7 @@ def send_code_via_mms(participant):
     select_attributes = (participant.email,)
 
     try:
-        url, code_filename = _build_qr_code_and_url(select_attributes)
+        url, code = _build_qr_code_and_url(select_attributes)
 
         client = TwilioRestClient(
             _get_environ_var('TWILIO_ACCOUNT_SID'),
@@ -75,6 +76,6 @@ def send_code_via_mms(participant):
         )
 
         if message.error_code is None:
-            return code_filename
+            return code
     except Exception as e:
         raise e

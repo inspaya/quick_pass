@@ -4,12 +4,15 @@ import os
 
 from flask import Flask, redirect, request, render_template, url_for
 from flask_sqlalchemy import SQLAlchemy
+from rq import Queue
+from worker import conn
 
 from forms import ParticipantForm
 
 app = Flask(__name__)
 app.config.from_object(os.environ['APP_SETTINGS'])
 db = SQLAlchemy(app)
+q = Queue(connection=conn)
 
 # We have to import after creating the db object
 from models import *
@@ -31,23 +34,25 @@ def register():
             email=participant_form.email.data
         ).first()
         if participant:
-            return 'Existing'
+            return 'Existing', 200
 
         try:
             participant = Participant(
                 firstname=participant_form.firstname.data,
                 lastname=participant_form.lastname.data,
-                email=participant_form.email.data
+                email=participant_form.email.data,
+                code=None
             )
+
+            # send QR Code
+            job = q.enqueue_call(func=send_code_via_mms, args=(participant,), result_ttl=500)
+            participant.code = job.id
 
             db.session.add(participant)
             db.session.commit()
-
-            # send QR Code
-            send_code_via_mms(participant)
         except Exception as e:
             # return friendly message based on Exception raised internally
-            return 'Failed'
+            return 'Failed', 500
 
         return redirect(url_for('index'))
 
