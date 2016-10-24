@@ -49,7 +49,7 @@ def _build_qr_code_and_url(select_attributes):
         if code_generator_return == 0:
             _upload_qr_code(code_filename)
             image_url = _get_environ_var('BASE_MMS_URL') + code_filename
-            return image_url, code_filename
+            return image_url, code
     except Exception as e:
         raise e
 
@@ -61,7 +61,7 @@ def send_code_via_mms(participant):
     select_attributes = (participant.email,)
 
     try:
-        url, code_filename = _build_qr_code_and_url(select_attributes)
+        url, code = _build_qr_code_and_url(select_attributes)
 
         client = TwilioRestClient(
             _get_environ_var('TWILIO_ACCOUNT_SID'),
@@ -76,6 +76,6 @@ def send_code_via_mms(participant):
         )
 
         if message.error_code is None:
-            return code_filename
+            return code
     except Exception as e:
         raise e
