@@ -6,7 +6,8 @@ Technology Stack
 ================
 * Python/Flask
 * Twilio MMS API
-* ...more to come
+* Redis
+* rq
 
 License
 =======
