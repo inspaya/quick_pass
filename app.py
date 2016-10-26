@@ -5,6 +5,7 @@ import os
 from flask import Flask, redirect, request, render_template, url_for
 from flask_sqlalchemy import SQLAlchemy
 from rq import Queue
+from rq.job import Job
 from worker import conn
 
 from forms import ParticipantForm
@@ -23,6 +24,18 @@ from services import *
 def index():
     participant_form = ParticipantForm(request.form)
     return render_template('index.html', form=participant_form)
+
+
+@app.route('/codename/<job_id>', methods=['GET'])
+def get_codename(job_id):
+    job = Job(job_id, connection=conn)
+
+    if job.is_finished:
+        participant = Participant.query.filter_by(code=job_id)
+        participant.update({'code': str(job.result)})
+        db.session.commit()
+        return 'Complete', 200
+    return 'Pending', 202
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -46,6 +59,7 @@ def register():
 
             # send QR Code
             job = q.enqueue_call(func=send_code_via_mms, args=(participant,), result_ttl=500)
+            job.save()
             participant.code = job.id
 
             db.session.add(participant)
