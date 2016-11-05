@@ -64,7 +64,7 @@ def _build_qr_code_and_url(select_attributes, upload_type='s3'):
     }
 
     try:
-        code = '{}'.format(str(uuid.uuid1()))
+        code = '{}'.format(str(uuid.uuid4()))
         code_filename = '{}{}'.format(code, '.png')
         code_fullpath = _get_environ_var('GENERATED_CODES_DIRECTORY') + code_filename
         code_generator_return = check_call(
